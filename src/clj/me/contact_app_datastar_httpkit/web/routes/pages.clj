@@ -11,7 +11,7 @@
 (defn wrap-page-defaults []
   (let [error-page (layout/error-page
                      {:status 403
-                      :title "Invalid anti-forgery token"})]
+                      :title  "Invalid anti-forgery token"})]
     #(wrap-anti-forgery % {:error-response error-page})))
 
 (defn home [request]

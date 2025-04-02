@@ -14,7 +14,7 @@
 (def message "Hello, world!")
 
 
-(def msg-count  (count message))
+(def msg-count (count message))
 
 
 (defn ->frag [i]
