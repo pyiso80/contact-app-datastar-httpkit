@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16.8
+    container_name: my-postgres2
+    restart: always
+    environment:
+      POSTGRES_USER: contacts
+      POSTGRES_PASSWORD: contacts
+      POSTGRES_DB: contacts
+#    volumes:
+#      - ./docker/data:/var/lib/postgresql/data
+#      - ./docker/logs:/var/log/postgresql  # Mount a host directory for logs
+    ports:
+      - 5433:5432
+
+
+# to enable logging
+# log_statement = 'all' in (/var/lib/postgresql/data/postgresql.conf)

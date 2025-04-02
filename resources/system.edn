@@ -53,6 +53,10 @@
  :db.sql/migrations {:store :database,
                      :db {:datasource #ig/ref :db.sql/connection},
                      :migrate-on-init? true}
- :db.sql/connection #profile {:dev {:jdbc-url "jdbc:sqlite:contact-app-datastar-httpkit_dev.db"},
-                              :test {:jdbc-url "jdbc:sqlite:contact-app-datastar-httpkit_test.db"},
-                              :prod {:jdbc-url #env JDBC_URL}}}
+ :db.sql/connection   #profile {:dev  {:jdbc-url "jdbc:postgresql://localhost:5433/contacts?user=contacts&password=contacts"}
+                                :test {:jdbc-url "jdbc:postgresql://localhost:5433/contacts?user=contacts&password=contacts"}
+                                :prod {:jdbc-url   #env JDBC_URL
+                                       :init-size  1
+                                       :min-idle   1
+                                       :max-idle   8
+                                       :max-active 32}}}
