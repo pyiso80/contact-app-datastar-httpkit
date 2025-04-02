@@ -1,40 +1,43 @@
 {:paths   ["src/clj"
            "resources"]
 
- :deps    {org.clojure/clojure             {:mvn/version "1.12.0"}
+ :deps    {org.clojure/clojure {:mvn/version "1.12.0"}
 
            ;; Routing
-           metosin/reitit                  {:mvn/version "0.7.2"}
+ metosin/reitit {:mvn/version "0.7.2"}
 
            ;; Ring
-           metosin/ring-http-response      {:mvn/version "0.9.3"}
-           ring/ring-core                  {:mvn/version "1.14.0"}
-           ring/ring-defaults              {:mvn/version "0.6.0"}
+ metosin/ring-http-response {:mvn/version "0.9.3"}
+ ring/ring-core {:mvn/version "1.14.0"}
+ ring/ring-defaults {:mvn/version "0.6.0"}
 
            ;; Logging
-           ch.qos.logback/logback-classic  {:mvn/version "1.5.16"}
+ ch.qos.logback/logback-classic {:mvn/version "1.5.16"}
 
            ;; Data coercion
-           luminus-transit/luminus-transit {:mvn/version "0.1.6"
-                                            :exclusions  [com.cognitect/transit-clj]}
-           metosin/muuntaja                {:mvn/version "0.6.8"}
+ luminus-transit/luminus-transit {:mvn/version "0.1.6"
+                                  :exclusions [com.cognitect/transit-clj]}
+ metosin/muuntaja {:mvn/version "0.6.8"}
 
            ;; datastar
-           datastar/sdk                    {:git/url   "https://github.com/starfederation/datastar/"
-                                            :git/sha   "70b77cf09273d293d9b353ad02a1e0841994cc44"
-                                            :deps/root "sdk/clojure/sdk"}
-           datastar/http-kit               {:git/url   "https://github.com/starfederation/datastar/"
-                                            :git/sha   "70b77cf09273d293d9b353ad02a1e0841994cc44"
-                                            :deps/root "sdk/clojure/adapter-http-kit"}
-           dev.onionpancakes/chassis       {:mvn/version "1.0.365"}
-           com.cnuernber/charred           {:mvn/version "1.034"}
+ datastar/sdk {:git/url "https://github.com/starfederation/datastar/"
+               :git/sha "70b77cf09273d293d9b353ad02a1e0841994cc44"
+               :deps/root "sdk/clojure/sdk"}
+ datastar/http-kit {:git/url "https://github.com/starfederation/datastar/"
+                    :git/sha "70b77cf09273d293d9b353ad02a1e0841994cc44"
+                    :deps/root "sdk/clojure/adapter-http-kit"}
+ dev.onionpancakes/chassis {:mvn/version "1.0.365"}
+ com.cnuernber/charred {:mvn/version "1.034"}
            ;; end datastar
 
            ;; kit Libs
-           io.github.kit-clj/kit-core      {:mvn/version "1.0.9"}
-           io.github.kit-clj/kit-http-kit  {:mvn/version "1.0.5"}
-           selmer/selmer                   {:mvn/version "1.12.50"}
-           luminus/ring-ttl-session        {:mvn/version "0.3.3"}}
+ io.github.kit-clj/kit-core {:mvn/version "1.0.9"}
+ io.github.kit-clj/kit-http-kit {:mvn/version "1.0.5"}
+ selmer/selmer {:mvn/version "1.12.50"}
+ luminus/ring-ttl-session {:mvn/version "0.3.3"}
+ io.github.kit-clj/kit-sql-conman {:mvn/version "1.10.4"}
+ io.github.kit-clj/kit-sql-migratus {:mvn/version "1.0.4"}
+ org.xerial/sqlite-jdbc {:mvn/version "3.46.0.0"}}
  :aliases {:build {:deps       {io.github.clojure/tools.build {:mvn/version "0.9.6"}}
                    :ns-default build}
 

@@ -11,7 +11,9 @@
 
     ;; Routes
    [me.contact-app-datastar-httpkit.web.routes.api]
-    [me.contact-app-datastar-httpkit.web.routes.pages])
+    [me.contact-app-datastar-httpkit.web.routes.pages] 
+    [kit.edge.db.sql.conman] 
+    [kit.edge.db.sql.migratus])
   (:gen-class))
 
 ;; log uncaught exceptions in threads
