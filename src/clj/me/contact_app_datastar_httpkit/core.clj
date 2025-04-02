@@ -6,11 +6,11 @@
    [me.contact-app-datastar-httpkit.env :refer [defaults]]
 
     ;; Edges
-   [kit.edge.server.undertow]
+   [kit.edge.server.http-kit]
    [me.contact-app-datastar-httpkit.web.handler]
 
     ;; Routes
-   [me.contact-app-datastar-httpkit.web.routes.api] 
+   [me.contact-app-datastar-httpkit.web.routes.api]
     [me.contact-app-datastar-httpkit.web.routes.pages])
   (:gen-class))
 

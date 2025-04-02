@@ -5,7 +5,8 @@
     [integrant.core :as ig]
     [reitit.ring.middleware.muuntaja :as muuntaja]
     [reitit.ring.middleware.parameters :as parameters]
-    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]))
+    [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+    [me.contact-app-datastar-httpkit.web.controllers.hello-world :as hds]))
 
 (defn wrap-page-defaults []
   (let [error-page (layout/error-page
@@ -18,10 +19,12 @@
 
 ;; Routes
 (defn page-routes [_opts]
-  [["/" {:get home}]])
+  [["/" {:get home}]
+   ["/hello-world-home" {:get (partial hds/hello-world-home _opts)}]
+   ["/hello-world" {:get (partial hds/hello-world _opts)}]])
 
 (def route-data
-  {:middleware 
+  {:middleware
    [;; Default middleware for pages
     (wrap-page-defaults)
     ;; query-params & form-params
