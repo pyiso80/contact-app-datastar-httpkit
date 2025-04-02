@@ -10,7 +10,8 @@
    [me.contact-app-datastar-httpkit.web.handler]
 
     ;; Routes
-   [me.contact-app-datastar-httpkit.web.routes.api])
+   [me.contact-app-datastar-httpkit.web.routes.api] 
+    [me.contact-app-datastar-httpkit.web.routes.pages])
   (:gen-class))
 
 ;; log uncaught exceptions in threads
