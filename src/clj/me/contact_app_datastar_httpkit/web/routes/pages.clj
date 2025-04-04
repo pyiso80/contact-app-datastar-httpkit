@@ -6,6 +6,7 @@
     [reitit.ring.middleware.muuntaja :as muuntaja]
     [reitit.ring.middleware.parameters :as parameters]
     [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+    [me.contact-app-datastar-httpkit.web.controllers.contact :as contact]
     [me.contact-app-datastar-httpkit.web.controllers.hello-world :as hds]))
 
 (defn wrap-page-defaults []
@@ -15,13 +16,22 @@
     #(wrap-anti-forgery % {:error-response error-page})))
 
 (defn home [request]
-  (layout/render request "home.html"))
+  (layout/render request "index.html"))
 
 ;; Routes
 (defn page-routes [_opts]
-  [["/" {:get home}]
-   ["/hello-world-home" {:get (partial hds/hello-world-home _opts)}]
-   ["/hello-world" {:get (partial hds/hello-world _opts)}]])
+  [["/" {:get (partial contact/index _opts)}]
+   ;; ["/hello-world-home" {:get (partial hds/hello-world-home _opts)}]
+   ;; ["/hello-world" {:get (partial hds/hello-world _opts)}]
+   ["/contact/search" {:get (partial contact/search _opts)}]
+   ["/contact/view-all" {:get (partial contact/view-all _opts)}]
+   ["/contact/create-new" {:get  (partial contact/to-create-new _opts)
+                           :post (partial contact/create-new! _opts)}]
+   ["/contacts/:id"
+    ["/edit" {:get  (partial contact/to-edit _opts)
+              :post (partial contact/edit! _opts)}]
+    ["/delete" {:delete (partial contact/delete! _opts)}]
+    ["/view" {:get (partial contact/view _opts)}]]])
 
 (def route-data
   {:middleware

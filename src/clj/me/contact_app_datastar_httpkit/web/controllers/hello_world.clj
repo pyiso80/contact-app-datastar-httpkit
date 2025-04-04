@@ -28,8 +28,10 @@
 (def ^:private bufSize 1024)
 (def read-json (charred/parse-json-fn {:async? false :bufsize bufSize}))
 
+
 (defn get-signals [req]
   (-> req d*/get-signals read-json))
+
 
 (defn hello-world [_ request]
   (let [d (-> request get-signals (get "delay") int)]
