@@ -1,5 +1,6 @@
 (ns me.contact-app-datastar-httpkit.dev-middleware
-  (:require [starfederation.datastar.clojure.api :as d*]
+  (:require [clojure.tools.logging :as log]
+            [starfederation.datastar.clojure.api :as d*]
             [charred.api :as charred]))
 
 
@@ -14,8 +15,11 @@
 (defn wrap-json-body
   [handler]
   (fn [request]
-    (let [mod-req (assoc request :d*-signals (get-signals request))]
-      (handler mod-req))))
+    (let [signals (d*/get-signals request)]
+      (if signals
+        (let [mod-req (assoc request :d*-signals (get-signals request))]
+          (handler mod-req))
+        (handler request)))))
 
 
 (defn wrap-dev [handler _opts]
