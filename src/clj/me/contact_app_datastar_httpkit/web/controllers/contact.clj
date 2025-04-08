@@ -9,15 +9,26 @@
             [dev.onionpancakes.chassis.compiler :as hc]
             [dev.onionpancakes.chassis.core :as h]
             [charred.api :as charred]
-            [me.contact-app-datastar-httpkit.web.html.contact :as hfrags]
-            [me.contact-app-datastar-httpkit.web.html.index :as index]))
+            [me.contact-app-datastar-httpkit.web.html.contact :refer [create-new-pg]]
+            [me.contact-app-datastar-httpkit.web.html.home :refer [home-pg]]))
 
 
 (def col-heads {:first "First" :last "Last" :phone "Phone" :email "Email"})
 
 
-(defn index [_ req]
-  (-> (response/response (h/html (hc/compile index/home-page)))
+(defn render-contact-new [contact verr]
+  (-> (create-new-pg contact verr *anti-forgery-token*)
+      (hc/compile)
+      (h/html)
+      (response/response)
+      (response/content-type "text/html")))
+
+
+(defn home [_ req]
+  (-> home-pg
+      (hc/compile)
+      (h/html)
+      (response/response)
       (response/content-type "text/html")))
 
 
@@ -29,23 +40,32 @@
   (-> req d*/get-signals read-json))
 
 
-(def new-html (h/html (hc/compile hfrags/frag-new)))
 (defn to-create-new [_ req]
-  (->sse-response req
-                  {on-open
-                   (fn [sse]
-                     (d*/with-open-sse
-                       sse
-                       ;;(d*/execute-script! sse "history.pushState('/contact/create-new', '', '/contact/create-new')")
-                       (d*/merge-fragment!
-                         sse
-                         (format new-html *anti-forgery-token*))))}))
+  (render-contact-new
+    {:email "" :first "" :last "" :phone ""}
+    {}))
 
 
-(defn create-new! [_ req]
-  (log/debug (:d*-signals req))
-  (-> (response/response "<h1>Hello, World!</h1>")
-      (response/content-type "text/html")))
+(defn create-new! [{:keys [query-fn]} req]
+  (let [{{:strs [email first last phone]} :form-params} req
+        contact {:email email :first first :last last :phone phone}
+        verr (if (some #(empty? %) [email first last phone])
+               (-> {}
+                   (cond->
+                     (empty? first)
+                     (assoc-in [:first] "First name is required")
+                     (empty? last)
+                     (assoc-in [:last] "Last name is required")
+                     (empty? phone)
+                     (assoc-in [:phone] "Phone number is required")
+                     (empty? email)
+                     (assoc-in [:email] "Email is required")))
+               {})]
+    (if (not-empty verr)
+      (render-contact-new contact verr)
+      (do
+        (query-fn :save-contact! contact)
+        (http-response/found "/")))))
 
 
 (defn to-edit [_ req]

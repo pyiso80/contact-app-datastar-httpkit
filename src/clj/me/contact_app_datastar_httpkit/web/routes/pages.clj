@@ -15,12 +15,10 @@
                       :title  "Invalid anti-forgery token"})]
     #(wrap-anti-forgery % {:error-response error-page})))
 
-(defn home [request]
-  (layout/render request "index.html"))
 
 ;; Routes
 (defn page-routes [_opts]
-  [["/" {:get (partial contact/index _opts)}]
+  [["/" {:get (partial contact/home _opts)}]
    ;; ["/hello-world-home" {:get (partial hds/hello-world-home _opts)}]
    ;; ["/hello-world" {:get (partial hds/hello-world _opts)}]
    ["/contact/search" {:get (partial contact/search _opts)}]

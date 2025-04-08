@@ -8,3 +8,11 @@
 SELECT id, first, last, phone, email
 FROM contact
 ORDER BY id;
+
+-- :name save-contact!
+-- :result one
+-- :doc Insert a new contact and return the inserted row
+-- (query-fn :save-contact! {:first "Tom" :last "Müller" :phone "123-456-8888" :email "tom.müller@example.com"})
+INSERT INTO contact (first, last, phone, email)
+VALUES (:first, :last, :phone, :email)
+RETURNING *;
