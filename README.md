@@ -1,4 +1,4 @@
-# contact-app-datastar-httpkit
+# contact-app
 
 Start a [REPL](#repls) in your editor or terminal of choice.
 

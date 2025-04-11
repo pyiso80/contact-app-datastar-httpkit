@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [clojure.tools.build.api :as b]))
 
-(def lib 'me/contact-app-datastar-httpkit)
+(def lib 'me/contact-app)
 (def main-cls (string/join "." (filter some? [(namespace lib) (name lib) "core"])))
 (def version (format "0.0.1-SNAPSHOT"))
 (def target-dir "target")

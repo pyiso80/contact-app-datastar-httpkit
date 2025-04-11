@@ -16,3 +16,41 @@ ORDER BY id;
 INSERT INTO contact (first, last, phone, email)
 VALUES (:first, :last, :phone, :email)
 RETURNING *;
+
+-- :name find-contacts
+-- :result many
+-- (query-fn :find-contacts {:text "m"})
+SELECT id, first, last, phone, email
+FROM contact
+WHERE first ILIKE '%' || :text || '%'
+    OR last ILIKE '%' || :text || '%'
+    OR phone ILIKE '%' || :text || '%'
+    OR email ILIKE '%' || :text || '%'
+ORDER BY id;
+
+-- :name find-contact-by-id
+-- :result one
+-- :doc Get a single contact by ID
+-- (query-fn :find-contact-by-id {:id 1})
+SELECT id, first, last, phone, email
+FROM contact
+WHERE id = :id;
+
+-- :name update-contact!
+-- :result one
+-- :doc Update an existing contact by ID and return the updated row
+-- (query-fn :update-contact! {:id 1 :first "Updated" :last "Name" :phone "987-654-3210" :email "updated@example.com"})
+UPDATE contact
+SET first = :first,
+    last  = :last,
+    phone = :phone,
+    email = :email
+WHERE id = :id
+RETURNING *;
+
+-- :name delete-contact! :exec
+-- :doc Delete a contact by ID
+-- (query-fn :delete-contact! {:id 1})
+DELETE
+FROM contact
+WHERE id = :id;

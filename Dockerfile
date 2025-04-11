@@ -8,8 +8,8 @@ RUN clj -Sforce -T:build all
 
 FROM azul/zulu-openjdk-alpine:17
 
-COPY --from=build /target/contact-app-datastar-httpkit-standalone.jar /contact-app-datastar-httpkit/contact-app-datastar-httpkit-standalone.jar
+COPY --from=build /target/contact-app-standalone.jar /contact-app/contact-app-standalone.jar
 
 EXPOSE $PORT
 
-ENTRYPOINT exec java $JAVA_OPTS -jar /contact-app-datastar-httpkit/contact-app-datastar-httpkit-standalone.jar
+ENTRYPOINT exec java $JAVA_OPTS -jar /contact-app/contact-app-standalone.jar

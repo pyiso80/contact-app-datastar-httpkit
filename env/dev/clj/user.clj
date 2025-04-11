@@ -11,7 +11,7 @@
     [integrant.repl.state :as state]
     [kit.api :as kit]
     [lambdaisland.classpath.watch-deps :as watch-deps]      ;; hot loading for deps
-    [me.contact-app-datastar-httpkit.core :refer [start-app]]))
+    [me.contact-app.core :refer [start-app]]))
 
 ;; uncomment to enable hot loading for deps
 (watch-deps/start! {:aliases [:dev :test]})
@@ -23,13 +23,13 @@
 (defn dev-prep!
   []
   (integrant.repl/set-prep! (fn []
-                              (-> (me.contact-app-datastar-httpkit.config/system-config {:profile :dev})
+                              (-> (me.contact-app.config/system-config {:profile :dev})
                                   (ig/expand)))))
 
 (defn test-prep!
   []
   (integrant.repl/set-prep! (fn []
-                              (-> (me.contact-app-datastar-httpkit.config/system-config {:profile :test})
+                              (-> (me.contact-app.config/system-config {:profile :test})
                                   (ig/expand)))))
 
 ;; Can change this to test-prep! if want to run tests as the test profile in your repl

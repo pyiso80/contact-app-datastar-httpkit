@@ -19,7 +19,7 @@
                                   :keywordize true}
                          :cookies true
                          :session {:flash true
-                                   :cookie-name "me.contact-app-datastar-httpkit"
+                                   :cookie-name "me.contact-app"
                                    :cookie-attrs {:max-age 86400
                                                   :http-only true
                                                   :same-site :strict}}
