@@ -1,6 +1,8 @@
 (ns me.contact-app.web.controllers.contact
   (:require [clojure.set :as set]
             [clojure.tools.logging :as log]
+            [dev.onionpancakes.chassis.core :as h]
+            [me.contact-app.web.html.styles :as sty]
             [me.contact-app.web.pages.layout :as layout]
             [ring.util.http-response :as http-response]
             [ring.util.response :as response]
@@ -11,7 +13,7 @@
             [dev.onionpancakes.chassis.core :as oc-core]
             [hiccup2.core :as hc-core]
             [charred.api :as ch]
-            [me.contact-app.web.html.new :refer [create-new-pg contact-new-form]]
+            [me.contact-app.web.html.new :refer [create-new-pg contact-new-form verr-input verr-msg]]
             [me.contact-app.web.html.home :refer [home-pg]]
             [me.contact-app.web.html.list :refer [contact-list]]
             [me.contact-app.web.html.edit :refer [edit-contact-pg]]
@@ -23,6 +25,11 @@
   (->sse-response
     req
     {on-open #(d*/with-open-sse % (fn % data))}))
+
+(defn send-sse2 [req myfn]
+  (->sse-response
+    req
+    {on-open #(d*/with-open-sse % (myfn %))}))
 
 
 (def col-heads {:first "First" :last "Last" :phone "Phone" :email "Email"})
@@ -99,16 +106,37 @@
           (assoc-in [:email] "Email is required")))
 
 
-(defn validate-form [{:keys [query-fn]} req]
+(defn handle-verr [req id verr]
+  (if (seq (id verr))
+    (send-sse2 req
+               (fn [sse]
+                 (d*/merge-fragment!
+                   sse
+                   (verr-input (name id) (str sty/input-class " " sty/err-input-class))
+                   {d*/merge-mode d*/mm-upsert-attributes})
+                 (d*/merge-fragment!
+                   sse
+                   (verr-msg (str "verr-" (name id)) sty/err-text-class (id verr)))))
+    (send-sse2 req
+               (fn [sse]
+                 (d*/merge-fragment!
+                   sse
+                   (verr-input (name id) sty/input-class)
+                   {d*/merge-mode d*/mm-upsert-attributes})
+                 (d*/merge-fragment!
+                   sse
+                   (verr-msg (str "verr-" (name id)) "hidden" ""))))))
+
+
+(defn validate-form [_ req]
   (let [contact (-> req
                     (get-signals)
                     (keywordize-keys)
                     (select-keys [:first :last :phone :email]))
-        verr (->> contact
-                  (validate-contact)
-                  (hash-map :ve)
-                  (ch/write-json-str))]
-    (send-sse req d*/merge-signals! verr)))
+        {{:strs [f]} :query-params} req
+        fkw (keyword f)
+        verr (validate-contact contact)]
+    (handle-verr req fkw verr)))
 
 
 (defn create-new! [{:keys [query-fn]} req]
