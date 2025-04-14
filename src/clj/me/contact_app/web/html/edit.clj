@@ -1,11 +1,13 @@
 (ns me.contact-app.web.html.edit
-  (:require [hiccup2.core :as hc]
+  (:require [hiccup2.core :as hc-core]
+            [hiccup2.core :as hc]
             [me.contact-app.web.html.styles :as sty]
-            [me.contact-app.web.html.layout-hc :refer [layout]]))
+            [me.contact-app.web.html.layout-hc :refer [layout]]
+            [ring.util.response :as response]))
 
 
 (defn main-content [contact verr csrf]
-  [:div
+  [:div {:id "content"}
    [:form {:action (format "/contact/%s/edit" (:id contact))
            :method "post"}
     [:fieldset
@@ -64,7 +66,14 @@
                            (hc/raw))}
     "Delete"]])
 
-(defn edit-contact-pg [contact verr csrf]
+(defn contact-edit-page [contact verr csrf]
   (layout
     "New Contact"
     (main-content contact verr csrf)))
+
+(defn contact-edit-page-html [contact verr csrf]
+  (-> (hc-core/raw "<!DOCTYPE html>")
+      (hc-core/html (contact-edit-page contact verr csrf))
+      (str)
+      (response/response)
+      (response/content-type "text/html")))

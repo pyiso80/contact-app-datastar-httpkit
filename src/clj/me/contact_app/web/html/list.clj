@@ -1,9 +1,12 @@
 (ns me.contact-app.web.html.list
-  (:require [dev.onionpancakes.chassis.core :as cc]
+  (:require [dev.onionpancakes.chassis.compiler :as oc-compiler]
+            [dev.onionpancakes.chassis.core :as oc-core]
+            [dev.onionpancakes.chassis.core :as cc]
             [me.contact-app.web.html.styles :as sty]
             [me.contact-app.web.html.layout :refer [layout]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
-            [me.contact-app.web.html.home :as home]))
+            [me.contact-app.web.html.home :as home]
+            [ring.util.response :as response]))
 
 
 (defn contact-rows [contacts]
@@ -24,3 +27,10 @@
   (layout
     "Contacts"
     (home/main-content (contact-rows contacts))))
+
+(defn contact-list-html [contacts]
+  (-> (contact-list contacts)
+      (oc-compiler/compile)
+      (oc-core/html)
+      (response/response)
+      (response/content-type "text/html")))

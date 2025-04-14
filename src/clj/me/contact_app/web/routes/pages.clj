@@ -25,7 +25,7 @@
    ["/contact/view-all" {:get (partial contact/view-all _opts)}]
    ["/contact/create-new" {:get  (partial contact/to-create-new _opts)
                            :post (partial contact/create-new! _opts)}]
-   ["/contact/validate" {:get (partial contact/validate-form _opts)}]
+   ["/contact/validate" {:get (partial contact/validate-inline _opts)}]
    ["/contact/:id"
     ["/edit" {:get  (partial contact/to-edit _opts)
               :post (partial contact/edit! _opts)}]

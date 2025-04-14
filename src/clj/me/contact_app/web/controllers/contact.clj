@@ -1,83 +1,24 @@
 (ns me.contact-app.web.controllers.contact
-  (:require [clojure.set :as set]
-            [clojure.tools.logging :as log]
-            [dev.onionpancakes.chassis.core :as h]
+  (:require [clojure.tools.logging :as log]
             [me.contact-app.web.html.styles :as sty]
             [me.contact-app.web.pages.layout :as layout]
             [ring.util.http-response :as http-response]
-            [ring.util.response :as response]
             [starfederation.datastar.clojure.api :as d*]
             [starfederation.datastar.clojure.adapter.http-kit :refer [->sse-response on-open]]
             [ring.middleware.anti-forgery :refer [*anti-forgery-token*]]
-            [dev.onionpancakes.chassis.compiler :as oc-compiler]
-            [dev.onionpancakes.chassis.core :as oc-core]
-            [hiccup2.core :as hc-core]
             [charred.api :as ch]
-            [me.contact-app.web.html.new :refer [create-new-pg contact-new-form verr-input verr-msg]]
-            [me.contact-app.web.html.home :refer [home-pg]]
-            [me.contact-app.web.html.list :refer [contact-list]]
-            [me.contact-app.web.html.edit :refer [edit-contact-pg]]
-            [me.contact-app.web.html.view :refer [contact-view-pg]]
+            [me.contact-app.web.html.new :refer [new-html new-form-html handle-verr-textbox handle-verr-msg]]
+            [me.contact-app.web.html.home :refer [home-page-html]]
+            [me.contact-app.web.html.list :refer [contact-list-html]]
+            [me.contact-app.web.html.edit :refer [contact-edit-page-html]]
+            [me.contact-app.web.html.view :refer [contact-view-html]]
             [clojure.walk :refer [keywordize-keys]]))
 
-
-(defn send-sse [req fn data]
-  (->sse-response
-    req
-    {on-open #(d*/with-open-sse % (fn % data))}))
 
 (defn send-sse2 [req myfn]
   (->sse-response
     req
     {on-open #(d*/with-open-sse % (myfn %))}))
-
-
-(def col-heads {:first "First" :last "Last" :phone "Phone" :email "Email"})
-
-
-(defn render-contact-new [contact verr]
-  (-> (create-new-pg contact verr *anti-forgery-token*)
-      (oc-compiler/compile)
-      (oc-core/html)
-      (response/response)
-      (response/content-type "text/html")))
-
-
-(defn render-contact-new-form [contact verr]
-  (-> (contact-new-form contact verr *anti-forgery-token*)
-      (oc-compiler/compile)
-      (oc-core/html)))
-
-
-(defn render-contact-list [contacts]
-  (-> (contact-list contacts)
-      (oc-compiler/compile)
-      (oc-core/html)
-      (response/response)
-      (response/content-type "text/html")))
-
-
-(defn home [_ req]
-  (-> home-pg
-      (oc-compiler/compile)
-      (oc-core/html)
-      (response/response)
-      (response/content-type "text/html")))
-
-
-(defn render-edit-contact-pg [contact verr csrf]
-  (-> (hc-core/raw "<!DOCTYPE html>")
-      (hc-core/html (edit-contact-pg contact verr csrf))
-      (str)
-      (response/response)
-      (response/content-type "text/html")))
-
-(defn render-contact-view-pg [contact]
-  (-> (hc-core/raw "<!DOCTYPE html>")
-      (hc-core/html (contact-view-pg contact))
-      (str)
-      (response/response)
-      (response/content-type "text/html")))
 
 
 (def ^:private bufSize 1024)
@@ -89,65 +30,99 @@
 
 
 (defn to-create-new [_ req]
-  (render-contact-new
+  (new-html
     {:email "" :first "" :last "" :phone ""}
     {}))
 
 
 (defn validate-contact [contact]
-  (cond-> {:first "" :last "" :phone "" :email ""}
+  (cond-> {}
           (empty? (:first contact))
-          (assoc-in [:first] "First name is required")
+          (assoc :first "First name is required")
           (empty? (:last contact))
-          (assoc-in [:last] "Last name is required")
+          (assoc :last "Last name is required")
           (empty? (:phone contact))
-          (assoc-in [:phone] "Phone number is required")
-          (empty? (:email contact))
-          (assoc-in [:email] "Email is required")))
+          (assoc :phone "Phone number is required")))
 
 
-(defn handle-verr [req id verr]
-  (if (seq (id verr))
-    (send-sse2 req
-               (fn [sse]
-                 (d*/merge-fragment!
-                   sse
-                   (verr-input (name id) (str sty/input-class " " sty/err-input-class))
-                   {d*/merge-mode d*/mm-upsert-attributes})
-                 (d*/merge-fragment!
-                   sse
-                   (verr-msg (str "verr-" (name id)) sty/err-text-class (id verr)))))
-    (send-sse2 req
-               (fn [sse]
-                 (d*/merge-fragment!
-                   sse
-                   (verr-input (name id) sty/input-class)
-                   {d*/merge-mode d*/mm-upsert-attributes})
-                 (d*/merge-fragment!
-                   sse
-                   (verr-msg (str "verr-" (name id)) "hidden" ""))))))
+(defn handle-verr-inline [sse id verr]
+  (d*/with-open-sse
+    sse
+    (let [css-input sty/input-class
+          css-input-err (str sty/input-class " " sty/err-input-class)
+          css-msg-err sty/err-text-class
+          msg-id (str "verr-" (name id))]
+      (if (empty? verr)
+        (do
+          (d*/merge-fragment!
+            sse
+            (handle-verr-textbox id css-input)
+            {d*/merge-mode d*/mm-upsert-attributes})
+          (d*/merge-fragment!
+            sse
+            (handle-verr-msg msg-id "hidden" "")))
+        (do
+          (d*/merge-fragment!
+            sse
+            (handle-verr-textbox id css-input-err)
+            {d*/merge-mode d*/mm-upsert-attributes})
+          (d*/merge-fragment!
+            sse
+            (handle-verr-msg msg-id css-msg-err (id verr))))))))
 
 
-(defn validate-form [_ req]
+(defn handle-verr-all [sse verr]
+  (d*/with-open-sse
+    sse
+    (doseq [e verr
+            :let [css-input (str sty/input-class " " sty/err-input-class)
+                  css-msg sty/err-text-class
+                  input-id (name (first e))
+                  msg-id (str "verr-" input-id)
+                  msg (second e)]]
+      (do
+        (d*/merge-fragment!
+          sse
+          (handle-verr-textbox input-id css-input)
+          {d*/merge-mode d*/mm-upsert-attributes})
+        (d*/merge-fragment!
+          sse
+          (handle-verr-msg msg-id css-msg msg))))))
+
+
+(defn validate-email [email query-fn]
+  (let [existing (query-fn :find-email {:email email})]
+    (cond (empty? email)
+          {:email "Email is required"}
+          existing
+          {:email "Email already exists."})))
+
+
+(defn validate-inline [{:keys [query-fn]} req]
   (let [contact (-> req
                     (get-signals)
                     (keywordize-keys)
                     (select-keys [:first :last :phone :email]))
         {{:strs [f]} :query-params} req
-        fkw (keyword f)
-        verr (validate-contact contact)]
-    (handle-verr req fkw verr)))
+        verr (if (= :email (keyword f))
+               (validate-email (:email contact) query-fn)
+               (select-keys (validate-contact contact) [(keyword f)]))]
+    (log/debug "contact: " contact " " "verr: " verr)
+    (send-sse2 req #(handle-verr-inline % (keyword f) verr))))
 
 
 (defn create-new! [{:keys [query-fn]} req]
+  (log/debug "create-new!")
   (let [contact (-> req
                     (get-signals)
                     (keywordize-keys)
                     (select-keys [:first :last :phone :email]))
-        verr (validate-contact contact)]
+        email-verr (validate-email (:email contact) query-fn)
+        other-verr (validate-contact contact)
+        verr (merge email-verr other-verr)]
     (log/debug verr)
     (if (not-empty verr)
-      (send-sse req d*/merge-fragment! (render-contact-new-form contact verr))
+      (send-sse2 req #(handle-verr-all % verr))
       (do
         (query-fn :save-contact! contact)
         (http-response/found "/")))))
@@ -157,7 +132,7 @@
   (let [{{:keys [id]} :path-params} req
         contact (query-fn :find-contact-by-id {:id (some-> id Integer/parseInt)})]
     (log/debug contact)
-    (render-edit-contact-pg contact {} *anti-forgery-token*)))
+    (contact-edit-page-html contact {} *anti-forgery-token*)))
 
 
 (defn edit! [{:keys [query-fn]} req]
@@ -178,7 +153,7 @@
                {})]
     (log/debug id)
     (if (not-empty verr)
-      (render-edit-contact-pg contact {} verr)
+      (contact-edit-page-html contact {} verr)
       (do
         (query-fn :update-contact! (assoc contact :id (some-> id Integer/parseInt)))
         (http-response/found "/")))))
@@ -190,14 +165,14 @@
         data "<div id='content'><h1 class='text-3xl font-bold'>Just Deleted</h1></div>"]
     (do
       (query-fn :delete-contact! {:id (some-> id Integer/parseInt)})
-      (send-sse req d*/merge-fragment! data))))
+      (send-sse2 req (fn [sse] (d*/merge-fragment! sse data))))))
 
 
 (defn view [{:keys [query-fn]} req]
   (let [{{:keys [id]} :path-params} req
         contact (query-fn :find-contact-by-id {:id (some-> id Integer/parseInt)})]
     (log/debug id)
-    (render-contact-view-pg contact)))
+    (contact-view-html contact)))
 
 
 (defn view-all [{:keys [query-fn]} req]
@@ -215,4 +190,7 @@
 (defn search [{:keys [query-fn]} req]
   (let [{{:strs [q]} :query-params} req
         contacts (query-fn :find-contacts {:text q})]
-    (render-contact-list contacts)))
+    (contact-list-html contacts)))
+
+(defn home [_ req]
+  (home-page-html))

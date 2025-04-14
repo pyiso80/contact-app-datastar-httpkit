@@ -1,6 +1,9 @@
 (ns me.contact-app.web.html.home
-  (:require [me.contact-app.web.html.styles :as sty]
-            [me.contact-app.web.html.layout :refer [layout]]))
+  (:require [dev.onionpancakes.chassis.compiler :as oc-compiler]
+            [dev.onionpancakes.chassis.core :as oc-core]
+            [me.contact-app.web.html.styles :as sty]
+            [me.contact-app.web.html.layout :refer [layout]]
+            [ring.util.response :as response]))
 
 (defn main-content [contact-list]
   [:div {:id "content"}
@@ -36,7 +39,15 @@
      :class sty/btn-class} "Add Contact"]])
 
 
-(defn home-pg []
+(defn home-page []
   (layout
     "Home"
     (main-content nil)))
+
+
+(defn home-page-html []
+  (-> home-page
+      (oc-compiler/compile)
+      (oc-core/html)
+      (response/response)
+      (response/content-type "text/html")))

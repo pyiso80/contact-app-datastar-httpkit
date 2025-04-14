@@ -54,3 +54,12 @@ RETURNING *;
 DELETE
 FROM contact
 WHERE id = :id;
+
+-- :name find-email
+-- :result one
+-- :doc Find existing emails
+-- ;; (query-fn :find-email {:email "bob"}), (query-fn :find-email {:email "bob.rob@example.com"})
+SELECT email
+FROM contact
+WHERE email ILIKE :email || '%'
+LIMIT 1;
