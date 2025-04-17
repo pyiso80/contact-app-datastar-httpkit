@@ -9,13 +9,14 @@
             [charred.api :as ch]
             [me.contact-app.web.html.new :refer [new-html new-form-html handle-verr-textbox handle-verr-msg]]
             [me.contact-app.web.html.home :refer [home-page-html]]
-            [me.contact-app.web.html.list :refer [contact-list-html]]
+            [me.contact-app.web.html.list :refer [contact-table-html contact-rows-html]]
             [me.contact-app.web.html.edit :refer [contact-edit-page-html]]
             [me.contact-app.web.html.view :refer [contact-view-html]]
-            [clojure.walk :refer [keywordize-keys]]))
+            [clojure.walk :refer [keywordize-keys]]
+            [me.contact-app.repo.contact-repo :as repo]))
 
 
-(defn send-sse2 [req myfn]
+(defn send-sse [req myfn]
   (->sse-response
     req
     {on-open #(d*/with-open-sse % (myfn %))}))
@@ -108,7 +109,7 @@
                (validate-email (:email contact) query-fn)
                (select-keys (validate-contact contact) [(keyword f)]))]
     (log/debug "contact: " contact " " "verr: " verr)
-    (send-sse2 req #(handle-verr-inline % (keyword f) verr))))
+    (send-sse req #(handle-verr-inline % (keyword f) verr))))
 
 
 (defn create-new! [{:keys [query-fn]} req]
@@ -122,7 +123,7 @@
         verr (merge email-verr other-verr)]
     (log/debug verr)
     (if (not-empty verr)
-      (send-sse2 req #(handle-verr-all % verr))
+      (send-sse req #(handle-verr-all % verr))
       (do
         (query-fn :save-contact! contact)
         (http-response/found "/")))))
@@ -165,7 +166,7 @@
         data "<div id='content'><h1 class='text-3xl font-bold'>Just Deleted</h1></div>"]
     (do
       (query-fn :delete-contact! {:id (some-> id Integer/parseInt)})
-      (send-sse2 req (fn [sse] (d*/merge-fragment! sse data))))))
+      (send-sse req #(d*/redirect! % "/contact/create-new")))))
 
 
 (defn view [{:keys [query-fn]} req]
@@ -187,10 +188,73 @@
   (layout/render req "new.html"))
 
 
-(defn search [{:keys [query-fn]} req]
-  (let [{{:strs [q]} :query-params} req
-        contacts (query-fn :find-contacts {:text q})]
-    (contact-list-html contacts)))
+(defn handle-paging [sse contacts limit]
+  (d*/merge-signals! sse
+                     (format "{last_id: %s, last_key: '%s'}"
+                             (:id (peek contacts))
+                             (:first (peek contacts))))
+  (if (< (count contacts) limit)
+    (d*/merge-fragment! sse
+                        "<div id='load-more'></div>")
+    (d*/merge-fragment! sse
+                        ;"<div id='load-more' data-on-intersect=alert(ctx.signals.signal('last_id').value);@get('/contact/load-more')></div>"
+                        "<div id='load-more' data-on-intersect=@get('/contact/load-more')></div>")))
+
+
+(defn show-first-page [sse contacts limit]
+  (do
+    (d*/merge-fragment! sse
+                        (contact-table-html contacts))
+    (handle-paging sse contacts limit)))
+
+
+(defn show-next-page [sse contacts limit]
+  (do
+    (d*/merge-fragment! sse
+                        (contact-rows-html contacts)
+                        {d*/selector "#cotact-table-body" d*/merge-mode d*/mm-append})
+    (handle-paging sse contacts limit)))
+
+
+(defn search [{:keys [ds]} req]
+  (let [{:keys [q
+                sort_by
+                sort_order
+                limit]} (-> req
+                            (get-signals)
+                            (keywordize-keys))
+        contacts (repo/find-contacts-keyset
+                   q
+                   (keyword sort_by)
+                   (keyword sort_order)
+                   ""
+                   ""
+                   limit
+                   ds)]
+    ;(log/debug "search: " last_id " " last_key)
+    (send-sse req #(show-first-page % contacts limit))))
+
+
+(defn load-next-page [{:keys [ds]} req]
+  (let [{:keys [q
+                sort_by
+                sort_order
+                last_id
+                last_key
+                limit]} (-> req
+                            (get-signals)
+                            (keywordize-keys))
+        contacts (repo/find-contacts-keyset
+                   q
+                   (keyword sort_by)
+                   (keyword sort_order)
+                   last_key
+                   last_id
+                   limit
+                   ds)]
+    ;(log/debug "load-next-page: " last_id " " last_key)
+    (send-sse req #(show-next-page % contacts limit))))
+
 
 (defn home [_ req]
   (home-page-html))

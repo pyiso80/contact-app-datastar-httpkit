@@ -22,17 +22,18 @@
   (let [[sql & params] query]
     (reduce (fn [s p] (str/replace-first s "?" (str "'" (str/replace p "'" "''") "'"))) sql params)))
 
-(defn find-contacts-keyset [txt sort-col sort-order limit last-on-page ds]
-  (let [last-seen-cond (when last-on-page
+(defn find-contacts-keyset [q sort-by sort-order last-key last-id limit ds]
+  ;(log/debug "find-contacts-keyset" last-key)
+  (let [last-seen-cond (when (int? last-id)
                          [(get {:asc :> :desc :<} sort-order :>)
-                          [:composite sort-col :id]
-                          [:composite (first last-on-page) (second last-on-page)]])
-        search-cond (when (seq txt)
+                          [:composite (keyword sort-by) :id]
+                          [:composite last-key last-id]])
+        search-cond (when (seq q)
                       [:or
-                       [:like :first [:concat "%" txt "%"]]
-                       [:like :last  [:concat "%" txt "%"]]
-                       [:like :phone [:concat "%" txt "%"]]
-                       [:like :email [:concat "%" txt "%"]]])
+                       [:like :first [:concat "%" q "%"]]
+                       [:like :last  [:concat "%" q "%"]]
+                       [:like :phone [:concat "%" q "%"]]
+                       [:like :email [:concat "%" q "%"]]])
         query {:select   [:id
                           :first
                           :last
@@ -46,10 +47,10 @@
                                (first conds)
                                [:and (first conds) (second conds)])
                              []))
-               :order-by [[sort-col sort-order] [:id sort-order]]
+               :order-by [[sort-by sort-order] [:id sort-order]]
                :limit    [limit]}]
     (let [sql (hsql/format query {:builder-fn rs/as-unqualified-maps})]
-      (log/debug "SQL: " (interpolate-sql sql))
+      ;(log/debug "SQL: " (interpolate-sql sql))
       (jdbc/execute! ds sql {:builder-fn rs/as-unqualified-maps}))))
 
 

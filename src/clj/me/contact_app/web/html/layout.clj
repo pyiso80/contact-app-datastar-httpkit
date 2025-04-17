@@ -26,7 +26,7 @@
          }
        };"]]
 
-    [:body {:class "bg-background text-white min-h-screen flex items-center justify-center"}
+    [:body {:class "bg-background text-white min-h-screen flex justify-center pt-10"}
      [:main {:class "w-full max-w-3xl p-6 bg-surface rounded-xl shadow-lg space-y-6"}
 
       ;; Header
@@ -42,4 +42,4 @@
               :class  "ml-4"}]]
 
       ;; Main content
-      [:div {:id "content"} content]]]]])
+      content]]]])

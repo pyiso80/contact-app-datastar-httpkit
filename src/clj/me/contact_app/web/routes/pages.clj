@@ -22,6 +22,7 @@
    ;; ["/hello-world-home" {:get (partial hds/hello-world-home _opts)}]
    ;; ["/hello-world" {:get (partial hds/hello-world _opts)}]
    ["/contact/search" {:get (partial contact/search _opts)}]
+   ["/contact/load-more" {:get (partial contact/load-next-page _opts)}]
    ["/contact/view-all" {:get (partial contact/view-all _opts)}]
    ["/contact/create-new" {:get  (partial contact/to-create-new _opts)
                            :post (partial contact/create-new! _opts)}]
